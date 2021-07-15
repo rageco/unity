@@ -1,0 +1,100 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using System.IO;
+using System;
+
+public class DialogueReader : MonoBehaviour
+{
+  public string[] divider;
+  public string newline = Environment.NewLine;
+  public DialoguesToImport[] toimport;
+  public string[] separator;
+
+  void Start()
+  {
+    separator = new string[1];
+    separator[0] = newline;
+    foreach(DialoguesToImport import in toimport)
+    {
+      ReadDialogueFile(import.filepath, import.dialogue);
+    }
+  }
+
+  void ReadDialogueFile(string path, Dialogue dialogue)
+  {
+    if(!File.Exists(path))
+    {
+      Debug.LogError("no such file exists");
+      return;
+    }
+
+    string filedata = File.ReadAllText(path);
+    LoadDialogueData(filedata, dialogue);
+  }
+
+
+  void LoadDialogueData(string data, Dialogue dialogue)
+  {
+    string[] elements = data.Split(divider, StringSplitOptions.None);
+
+    List<DialogueLine> dialogues = new List<DialogueLine>();
+
+    foreach(string element in elements)
+    {
+      int index = Array.FindIndex(elements, elements=> elements == element);
+      int debug = 0;
+      if(index != 0)
+      {
+        debug = 1;
+      }
+      string[] values = element.Split(separator, StringSplitOptions.None);
+      Debug.Log(values[debug + 0]);
+      int charactercode = Int32.Parse(values[debug + 0]);
+      string line = values[debug + 1];
+      int moodcode = Int32.Parse(values[debug + 2]);
+      bool enabled = false;
+      int listenercode = 0;
+      int listenermood = 0;
+
+      if(values.Length > debug + 4)
+      {
+        enabled = true;
+        listenercode = Int32.Parse(values[debug + 3]);
+        if(values.Length >= debug + 5)
+        {
+          listenermood = Int32.Parse(values[debug + 3]);
+        }
+      }
+      else
+      {
+        enabled = false;
+        listenercode = 0;
+        listenermood = 0;
+      }
+
+      DialogueLine dialogueline = new DialogueLine();
+      dialogueline.charactercode = charactercode;
+      dialogueline.line = line;
+      dialogueline.moodcode = moodcode;
+      SecondPerson listener = new SecondPerson();
+      listener.enabled = enabled;
+      listener.charactercode = listenercode;
+      listener.moodcode = listenermood;
+      dialogueline.listener = listener;
+      AdvancedLineOptions advanced = new AdvancedLineOptions();
+      dialogueline.advanced = advanced;
+
+      dialogues.Add(dialogueline);
+    }
+
+    dialogue.dialogues = dialogues.ToArray();
+  }
+}
+
+[System.Serializable]
+public class DialoguesToImport
+{
+  public string filepath;
+  public Dialogue dialogue;
+}

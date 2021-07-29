@@ -5,6 +5,7 @@ using UnityEngine;
 [System.Serializable]
 public class KeyInput
 {
+  public string use;
   public string key;
   public bool buffer;
   float activetime;
